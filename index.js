@@ -6,15 +6,25 @@ const connectDB = require('./config/db');
 
 const userRoute=require('./routes/userRoute');
 
-
-// Connect to DB
-connectDB();
+const authRoute=require('./routes/authRoute');
 
 const app=express();
+
+ app.set('view engine','ejs');
+
+ app.set('views','./views');
+
+
+
+    // Connect to DB
+    connectDB();
+
 
 app.use(express.json());
 
 app.use('/api',userRoute)
+
+app.use('/',authRoute)
 
 // app.use("/images", express.static(path.join("public/images")));
 app.use('/public', express.static('public'))
