@@ -21,9 +21,9 @@
 
 const express = require('express');
 const router = express.Router();
-const { userRegister } = require('../controllers/userController');
-const { upload } = require('../middlewares/user'); // multer
-const { registerValidation } = require('../utils/userValidator'); // express-validator
+const { userRegister ,verifyMailHandler,forgotPasswordHandler,loginHandler} = require('../controllers/userController');
+const { upload } = require('../middlewares/user');
+const { registerValidation,sendMailValidator,resetPasswordValidator,loginValidator } = require('../utils/userValidator'); 
 const validate = require('../middlewares/validate'); // custom validationResult handler
 const validateImage = require('../middlewares/validateImage'); // custom image checks
 
@@ -35,6 +35,12 @@ router.post(
   validateImage,                  // ✅ Check if image is present and correct  type
   userRegister                    // ✅ Now call controller
 );
+
+router.post('/verify-mail',sendMailValidator,verifyMailHandler);
+
+router.post('/forgot-password',resetPasswordValidator,forgotPasswordHandler);
+
+router.post('/login',loginValidator,loginHandler);
 
 module.exports = router;
 
