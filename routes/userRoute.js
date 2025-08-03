@@ -21,11 +21,12 @@
 
 const express = require('express');
 const router = express.Router();
-const { userRegister ,verifyMailHandler,forgotPasswordHandler,loginHandler} = require('../controllers/userController');
+const { userRegister ,verifyMailHandler,forgotPasswordHandler,loginHandler,profileHandler,updateProfile} = require('../controllers/userController');
 const { upload } = require('../middlewares/user');
-const { registerValidation,sendMailValidator,resetPasswordValidator,loginValidator } = require('../utils/userValidator'); 
+const { registerValidation,sendMailValidator,resetPasswordValidator,loginValidator, updateProfileValidator } = require('../utils/userValidator'); 
 const validate = require('../middlewares/validate'); // custom validationResult handler
 const validateImage = require('../middlewares/validateImage'); // custom image checks
+const { authenticate } = require('../middlewares/auth');
 
 router.post(
   '/register',
@@ -41,6 +42,10 @@ router.post('/verify-mail',sendMailValidator,verifyMailHandler);
 router.post('/forgot-password',resetPasswordValidator,forgotPasswordHandler);
 
 router.post('/login',loginValidator,loginHandler);
+
+router.get('/profile',authenticate,profileHandler);
+
+router.post('/update-profile',authenticate,upload.single('image'),updateProfileValidator,updateProfile);
 
 module.exports = router;
 

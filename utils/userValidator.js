@@ -43,3 +43,14 @@ exports.loginValidator=[
     .isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
 
 ]
+
+exports.updateProfileValidator=[
+
+  check('name')
+    .notEmpty().withMessage('Name is required')
+    .isLength({ min: 3 }).withMessage('Name must be at least 3 characters'),
+
+  check('mobile')
+    .notEmpty().withMessage('Mobile number is required')
+    .isMobilePhone().withMessage('Invalid mobile number'),
+];
