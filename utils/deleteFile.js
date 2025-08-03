@@ -5,7 +5,7 @@ const deleteFile=async (path)=>{
     try {
 
        await fs.unlink(path);
-       console.log('image deleted successfully');
+       console.log('User Image deleted successfully');
 
     }
     catch(error){

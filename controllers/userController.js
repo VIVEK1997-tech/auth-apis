@@ -1,94 +1,3 @@
-// const User=require('../models/userModel')
-
-// const bcrypt=require('bcryptjs')
-
-// const fs = require('fs');
-// const path = require('path');
-
-
-// const {upload}=require('../middlewares/user');
-
-// const {validationResult}=require('express-validator');
-        
-
-// const  userRegister = async(req,res)=>
-// {
-
-
-//     try {
-      
-        
-
-//          upload.single('image')(req, res, async (err) => {
-//       if (err) return res.status(500).json({ message: "Image upload failed", error: err.message });
-
-//           const error=validationResult(req);
-//           if(!error.isEmpty()){
-//             res.status(400).json({
-//               success:false,
-//               msg:'Error',
-//               errors:error.array()
-//             })
-//           }
-//        const { name, email, mobile, password } = req.body;
-
-//       const userExists = await User.findOne({ email });
-//       if (userExists) {
-//         // Optional: delete the uploaded file if user already exists
-//         if (req.file) {
-//           fs.unlink(path.join(__dirname, '../public/images/', req.file.filename), (err) => {
-//             if (err) console.error("Failed to delete unused image:", err);
-//           });
-//         }
-
-//         return res.status(400).json({ message: "User already exists" });
-//       }
-
-//       if (!req.file) return res.status(400).json({ message: "Image is required" });
-
-               
-
-//         const  hashPassword= await bcrypt.hash(password,10);
-
-//         const imagePath = req.file ? '/images/' + req.file.filename : null;
-
-//         if (!imagePath) {
-//         return res.status(400).json({ message: "Image is required" });
-//         }
-
-//         const newUser= new User({
-//             name,
-//             email,
-//             mobile,
-//             password:hashPassword,
-//             userImage:imagePath
-//         })
-
-        
-
-//         const userData= await newUser.save();
-
-//         res.status(200).json({
-//             message:'user registered successfully',
-//             user:userData
-//         });
-//     });
-//     }
-
-//     catch (error) {
-//   console.error(error); // 👈 This will show the real issue in your terminal
-//   return res.status(400).json({
-//     message: "user reg is failed",
-//     error: error.message // Optional: send the error message to frontend too
-//   });
-//     }
-// }
-
-
-// module.exports={userRegister};
-
-
-// alternate code
 
 const User = require('../models/userModel');
 
@@ -99,8 +8,9 @@ const path = require('path');
 const randomstring = require('randomstring');
 const jwt=require('jsonwebtoken');
 const mailer=require('../utils/mailer');
+const {deleteFile}=require('../utils/deleteFile');
 const { validationResult } = require('express-validator');
-const { match } = require('assert');
+
 
 const userRegister = async (req, res) => {
   try {
@@ -354,11 +264,9 @@ const resetSuccess=async(req,res)=>{
 };
 
 
-const generateAccessToken=async (user)=>{
-
-    const token= jwt.sign(user,process.env.JWT_SECRET,{expiresIn:'1h'})
-
-    return token
+const generateAccessToken =async (user) => {
+    const payload = {user};
+    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
 };
 
 
@@ -405,7 +313,7 @@ const loginHandler=async(req,res)=>{
           })
         }
 
-        const accesstoken= await generateAccessToken({userData});
+        const accesstoken= await generateAccessToken(userData);
 
         return res.status(201).json({
           success:true,
@@ -427,5 +335,80 @@ const loginHandler=async(req,res)=>{
   }
 };
 
+const profileHandler=async(req,res)=>{
+    try{
+          const userData=req.user.user;
+            
+          return res.status(201).json({
+            success:true,
+            msg:"user Profile Data",
+            data:userData
+          });
 
-module.exports = { userRegister,mailVerification,verifyMailHandler,forgotPasswordHandler,resetPassword,updatePassword,resetSuccess,loginHandler };
+
+    }
+    catch(error){
+      return res.status(400).json({
+      success:false,
+      msg:error.message  
+    })
+    }
+};
+
+const updateProfile=async(req,res)=>{
+
+  try{
+        const error=validationResult(req);
+        if(!error.isEmpty()){
+          return res.status(401).json({
+            success:false,
+            msg:error,
+            error:error.message
+          })
+        }
+        const userId=req.user.user._id;
+            console.log(userId);
+        const {name,mobile}=req.body;
+
+        const data={
+          name,
+          mobile
+        }
+
+        if(req.file!==undefined){
+
+          data.userImage="images/"+req.file.filename;
+
+          const oldUser=await User.findOne({_id:userId});
+          const oldImgPath=path.join(__dirname,'../public/'+oldUser.userImage);
+
+          deleteFile(oldImgPath);
+          
+        }
+
+        const userData=await User.findByIdAndUpdate({_id:userId},{
+          $set:data
+        },{new:true});
+
+
+        return res.status(201).json({
+          success:true,
+          msg:"User updated successfully",
+          data:userData
+        })
+
+
+
+  }
+  catch(error){
+    return res.status(400).json({
+      success:false,
+      msg:error,
+      error:error.message
+    })
+  }
+
+};
+
+
+module.exports = { userRegister,mailVerification,verifyMailHandler,forgotPasswordHandler,resetPassword,updatePassword,resetSuccess,loginHandler,profileHandler,updateProfile };
