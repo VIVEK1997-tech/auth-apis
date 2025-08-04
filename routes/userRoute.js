@@ -1,27 +1,7 @@
-// const express=require('express');
-
-// const router = express.Router();
-
-// const {registerValidation}=require('../utils/userValidator')
-
-
-// // const {uploadFile}=require('../controllers/uploadFile')
-
-// const {userRegister}=require('../controllers/userController')
-
-// router.post("/register",registerValidation,userRegister);
-
-
-
-// module.exports=router;
-
-
-// alternate code
-
 
 const express = require('express');
 const router = express.Router();
-const { userRegister ,verifyMailHandler,forgotPasswordHandler,loginHandler,profileHandler,updateProfile} = require('../controllers/userController');
+const { userRegister ,verifyMailHandler,forgotPasswordHandler,loginHandler,profileHandler,updateProfile,refreshToken} = require('../controllers/userController');
 const { upload } = require('../middlewares/user');
 const { registerValidation,sendMailValidator,resetPasswordValidator,loginValidator, updateProfileValidator } = require('../utils/userValidator'); 
 const validate = require('../middlewares/validate'); // custom validationResult handler
@@ -43,9 +23,14 @@ router.post('/forgot-password',resetPasswordValidator,forgotPasswordHandler);
 
 router.post('/login',loginValidator,loginHandler);
 
+
+// authenticated Routes
+
 router.get('/profile',authenticate,profileHandler);
 
 router.post('/update-profile',authenticate,upload.single('image'),updateProfileValidator,updateProfile);
+
+router.get('/refresh-token',authenticate,refreshToken);
 
 module.exports = router;
 

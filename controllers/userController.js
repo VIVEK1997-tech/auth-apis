@@ -8,6 +8,7 @@ const path = require('path');
 const randomstring = require('randomstring');
 const jwt=require('jsonwebtoken');
 const mailer=require('../utils/mailer');
+const {generateAccessToken,generateRefreshToken}=require('../utils/tokenUtils');
 const {deleteFile}=require('../utils/deleteFile');
 const { validationResult } = require('express-validator');
 
@@ -264,12 +265,6 @@ const resetSuccess=async(req,res)=>{
 };
 
 
-const generateAccessToken =async (user) => {
-    const payload = {user};
-    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
-};
-
-
 const loginHandler=async(req,res)=>{
   try{
         const error=validationResult(req);
@@ -314,12 +309,13 @@ const loginHandler=async(req,res)=>{
         }
 
         const accesstoken= await generateAccessToken(userData);
-
+        const refreshtoken=await generateRefreshToken(userData);
         return res.status(201).json({
           success:true,
           msg:'user login successfully ',
           userData:userData,
           accesstoken:accesstoken,
+          fefreshtoken:refreshtoken,
           tokenType:'Bearer',
         })
 
@@ -410,5 +406,34 @@ const updateProfile=async(req,res)=>{
 
 };
 
+const refreshToken=async (req,res)=>{
+  try{
 
-module.exports = { userRegister,mailVerification,verifyMailHandler,forgotPasswordHandler,resetPassword,updatePassword,resetSuccess,loginHandler,profileHandler,updateProfile };
+        const userId=req.user.user._id;
+
+          const userData=await User.findOne({_id:userId});
+
+        const accesstoken=await generateAccessToken(userData);
+        const refreshtoken=await generateRefreshToken(userData);
+
+
+        return res.status(201).json({
+          success:true,
+          msg:"User token is refreshed",
+          accesstoken:accesstoken,
+          refreshtoken:refreshtoken,
+          tokenType:"Bearer"
+        })
+
+  }
+  catch(error){
+     return res.status(400).json({
+      success:false,
+      msg:error,
+      error:error.message
+    })
+  }
+};
+
+
+module.exports = { userRegister,mailVerification,verifyMailHandler,forgotPasswordHandler,resetPassword,updatePassword,resetSuccess,loginHandler,profileHandler,updateProfile,refreshToken };
