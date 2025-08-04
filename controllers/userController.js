@@ -1,6 +1,6 @@
 
 const User = require('../models/userModel');
-
+const blackList=require('../models/blackListModel');
 const resetPass = require('../models/resetPassModel');
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
@@ -435,5 +435,33 @@ const refreshToken=async (req,res)=>{
   }
 };
 
+const logoutHandler=async(req,res)=>{
+  try{
+     const  Token=req.headers["authorization"];
+    
+     const  token = Token.split(' ');
+    const bearertoken=token[1];
 
-module.exports = { userRegister,mailVerification,verifyMailHandler,forgotPasswordHandler,resetPassword,updatePassword,resetSuccess,loginHandler,profileHandler,updateProfile,refreshToken };
+    const blacklist=new blackList({
+        token:bearertoken
+    });
+
+    await blacklist.save();
+
+    return res.status(201).json({
+      success:true,
+      msg:"you are logged out!"
+    });
+
+  }
+  catch(error){
+      return res.status(400).json({
+      success:false,
+      msg:error,
+      error:error.message
+    })
+  }
+};
+
+
+module.exports = { userRegister,mailVerification,verifyMailHandler,forgotPasswordHandler,resetPassword,updatePassword,resetSuccess,loginHandler,profileHandler,updateProfile,refreshToken,logoutHandler };
