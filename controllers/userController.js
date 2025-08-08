@@ -1,4 +1,4 @@
-
+const Blog=require('../models/userBlogModel');
 const User = require('../models/userModel');
 const blackList=require('../models/blackListModel');
 const resetPass = require('../models/resetPassModel');
@@ -463,5 +463,67 @@ const logoutHandler=async(req,res)=>{
   }
 };
 
+const userBlogHandler=async(req,res)=>{
 
-module.exports = { userRegister,mailVerification,verifyMailHandler,forgotPasswordHandler,resetPassword,updatePassword,resetSuccess,loginHandler,profileHandler,updateProfile,refreshToken,logoutHandler };
+    try {
+        const { restaurantName, review } = req.body;
+        const foodImages = req.files ? req.files.map(file => "public/images/" + file.filename) : [];
+
+        const userId=req.user.user._id;
+        const existingBlog = await Blog.findOne({ user:userId });
+        if (existingBlog) {
+            return res.status(400).json({
+                success: false,
+                message: "You already have a blog. Please update it instead."
+            });
+        }
+
+        const blog = await Blog.create({
+            user: req.user.user._id, // assuming authentication middleware sets req.user
+            restaurantName,
+            review,
+            foodImages
+        });
+
+        res.status(201).json({ success: true, data: blog });
+    } catch (error) {
+        console.error("Blog creation error:", error);
+        res.status(500).json({ success: false, message: "Something went wrong" });
+    }
+
+};
+
+const updateBlog=async(req,res)=>{
+  try {
+        const userId = req.user.user._id;
+        const foodImage = req.file ? "public/images/" + req.file.filename : null;
+        const { restaurantName, review } = req.body;
+
+        const blog = await Blog.findOneAndUpdate(
+            { user:userId },
+            { restaurantName,review,foodImage },
+            { new: true }
+        );
+
+        if (!blog) {
+            return res.status(404).json({
+                success: false,
+                message: "No blog found for this user"
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Blog updated successfully",
+            blog
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: err.message
+        });
+    }
+};
+
+
+module.exports = { userRegister,mailVerification,verifyMailHandler,forgotPasswordHandler,resetPassword,updatePassword,resetSuccess,loginHandler,profileHandler,updateProfile,refreshToken,logoutHandler,userBlogHandler,updateBlog };

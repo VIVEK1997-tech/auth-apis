@@ -1,6 +1,6 @@
 const jwt=require('jsonwebtoken');
 const blacklist=require('../models/blackListModel')
-const authenticate=(req,res,next)=>{
+const authenticate= async(req,res,next)=>{
 
 
     // console.log("Request headers:", req.headers);
@@ -15,8 +15,8 @@ const authenticate=(req,res,next)=>{
     try {
          const token = authHeader.split(' ');
          const bearertoken=token[1];
-        const blacklistedtoken= blacklist.findOne({token:bearertoken});
-
+        const blacklistedtoken=await blacklist.findOne({token:bearertoken});
+                
             if(blacklistedtoken){
                  return res.status(201).json({ 
                     success: true, 

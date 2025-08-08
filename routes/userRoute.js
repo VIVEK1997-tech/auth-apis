@@ -1,7 +1,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { userRegister ,verifyMailHandler,forgotPasswordHandler,loginHandler,profileHandler,updateProfile,refreshToken,logoutHandler} = require('../controllers/userController');
+const { userRegister ,verifyMailHandler,forgotPasswordHandler,loginHandler,profileHandler,updateProfile,refreshToken,logoutHandler,userBlogHandler,updateBlog} = require('../controllers/userController');
 const { upload } = require('../middlewares/user');
 const { registerValidation,sendMailValidator,resetPasswordValidator,loginValidator, updateProfileValidator } = require('../utils/userValidator'); 
 const validate = require('../middlewares/validate'); // custom validationResult handler
@@ -33,6 +33,10 @@ router.post('/update-profile',authenticate,upload.single('image'),updateProfileV
 router.get('/refresh-token',authenticate,refreshToken);
 
 router.get('/logout',authenticate,logoutHandler);
+
+router.post('/blog',authenticate,upload.array('images', 5),userBlogHandler);
+
+router.post('/update-blog',authenticate,upload.single('image'),updateBlog);
 
 module.exports = router;
 
