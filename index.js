@@ -8,6 +8,8 @@ const userRoute=require('./routes/userRoute');
 
 const authRoute=require('./routes/authRoute');
 
+const recipeRoute=require('./routes/recipeRoute');
+
 const app=express();
 
  app.set('view engine','ejs');
@@ -15,19 +17,20 @@ const app=express();
  app.set('views','./views');
 
 
-
-    // Connect to DB
+// Connect to DB
     connectDB();
 
 
 app.use(express.json());
 
-app.use('/api',userRoute)
+app.use('/api',userRoute);
 
-app.use('/',authRoute)
+app.use('/',authRoute);
 
-// app.use("/images", express.static(path.join("public/images")));
-app.use('/public', express.static('public'))
+app.use('/api',recipeRoute);
+
+app.use("/images", express.static(path.join("public/images")));
+app.use('/images', express.static('public/images'));
 
 //app.use("/api/files", fileRoutes);
 

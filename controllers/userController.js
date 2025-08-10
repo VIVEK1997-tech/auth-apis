@@ -15,7 +15,7 @@ const { validationResult } = require('express-validator');
 
 const userRegister = async (req, res) => {
   try {
-    const { name, email, mobile, password } = req.body;
+    const { name, email, mobile, password,role } = req.body;
 
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -35,6 +35,7 @@ const userRegister = async (req, res) => {
       name,
       email,
       mobile,
+      role:role || 'user', // use 'user' if role not provided
       password: hashPassword,
       userImage: imagePath
     });
@@ -315,7 +316,7 @@ const loginHandler=async(req,res)=>{
           msg:'user login successfully ',
           userData:userData,
           accesstoken:accesstoken,
-          fefreshtoken:refreshtoken,
+          refreshtoken:refreshtoken,
           tokenType:'Bearer',
         })
 
@@ -525,5 +526,49 @@ const updateBlog=async(req,res)=>{
     }
 };
 
+const getAllBlogs=async(req,res)=>{
+     try {
 
-module.exports = { userRegister,mailVerification,verifyMailHandler,forgotPasswordHandler,resetPassword,updatePassword,resetSuccess,loginHandler,profileHandler,updateProfile,refreshToken,logoutHandler,userBlogHandler,updateBlog };
+            const page=parseInt(req.query.page);
+            const limit=4;
+            totalBlogs=await Blog.countDocuments();
+
+            totalPages=Math.ceil(totalBlogs/limit);
+
+
+            if(page>totalPages){
+             return  res.status(401).json({message:'Page not found'})
+            }
+
+        const blogs = await Blog.find()
+            .populate("user", "name email") // Only essential user details
+            .sort({ createdAt: -1 }) // Latest first
+            .skip((page-1)*limit)
+            .exec();
+
+        if (!blogs.length) {
+            return res.status(404).json({
+                success: false,
+                message: "No blog posts found."
+            });
+        }
+
+        res.status(200).json({
+              success: true,
+              currentPage: page,
+              totalPages:totalPages,
+              data: blogs
+        });
+
+    } 
+    catch (error) {
+        console.error("Error fetching blogs:", error);
+        res.status(500).json({
+            success: false,
+            message: "Server error. Please try again later."
+        });
+    }
+};
+
+
+module.exports = { userRegister,mailVerification,verifyMailHandler,forgotPasswordHandler,resetPassword,updatePassword,resetSuccess,loginHandler,profileHandler,updateProfile,refreshToken,logoutHandler,userBlogHandler,updateBlog,getAllBlogs };
